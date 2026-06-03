@@ -6,6 +6,7 @@ const fields = {
   date: document.querySelector("#date"),
   tank: document.querySelector("#tank"),
   species: document.querySelector("#species"),
+  customSpecies: document.querySelector("#customSpecies"),
   fishTotal: document.querySelector("#fishTotal"),
   sampleCount: document.querySelector("#sampleCount"),
   sampleWeight: document.querySelector("#sampleWeight"),
@@ -31,6 +32,10 @@ const reportContent = document.querySelector("#reportContent");
 const printReportButton = document.querySelector("#printReport");
 const exportCsvButton = document.querySelector("#exportCsv");
 const installAppButton = document.querySelector("#installApp");
+const customSpeciesField = document.querySelector("#customSpeciesField");
+const listedSpecies = Array.from(fields.species.options)
+  .map((option) => option.value)
+  .filter((value) => value && value !== "Outros");
 
 let records = loadRecords();
 let installPrompt = null;
@@ -87,6 +92,25 @@ function calculate() {
     biomass,
     dailyFeed,
   };
+}
+
+function selectedSpeciesName() {
+  if (fields.species.value === "Outros") {
+    return fields.customSpecies.value.trim();
+  }
+
+  return fields.species.value;
+}
+
+function updateCustomSpeciesField() {
+  const isOtherSpecies = fields.species.value === "Outros";
+  customSpeciesField.hidden = !isOtherSpecies;
+  fields.customSpecies.required = isOtherSpecies;
+  fields.customSpecies.disabled = !isOtherSpecies;
+
+  if (!isOtherSpecies) {
+    fields.customSpecies.value = "";
+  }
 }
 
 function loadRecords() {
@@ -164,6 +188,7 @@ function clearMeasurementFields() {
 function clearForm() {
   form.reset();
   fields.date.value = todayValue();
+  updateCustomSpeciesField();
   stopEditing();
   calculate();
 }
@@ -176,7 +201,7 @@ function buildRecord(id = createId()) {
     property: fields.property.value.trim(),
     date: fields.date.value,
     tank: fields.tank.value.trim(),
-    species: fields.species.value,
+    species: selectedSpeciesName(),
     fishTotal: numberValue(fields.fishTotal),
     sampleCount: numberValue(fields.sampleCount),
     sampleWeight: numberValue(fields.sampleWeight),
@@ -189,7 +214,14 @@ function fillForm(record) {
   fields.property.value = record.property;
   fields.date.value = record.date;
   fields.tank.value = record.tank;
-  fields.species.value = record.species;
+  if (listedSpecies.includes(record.species)) {
+    fields.species.value = record.species;
+    fields.customSpecies.value = "";
+  } else {
+    fields.species.value = "Outros";
+    fields.customSpecies.value = record.species;
+  }
+  updateCustomSpeciesField();
   fields.fishTotal.value = record.fishTotal;
   fields.sampleCount.value = record.sampleCount;
   fields.sampleWeight.value = record.sampleWeight;
@@ -361,6 +393,8 @@ Object.values(fields).forEach((field) => {
   field.addEventListener("change", calculate);
 });
 
+fields.species.addEventListener("change", updateCustomSpeciesField);
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
 
@@ -456,4 +490,5 @@ if ("serviceWorker" in navigator) {
 }
 
 calculate();
+updateCustomSpeciesField();
 renderRecords();
