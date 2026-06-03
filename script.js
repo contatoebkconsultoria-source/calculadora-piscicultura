@@ -460,7 +460,10 @@ generateReportButton.addEventListener("click", () => {
 });
 
 closeReportButton.addEventListener("click", () => reportDialog.close());
-printReportButton.addEventListener("click", () => window.print());
+printReportButton.addEventListener("click", () => {
+  document.title = "Relatorio Biometria Piscicultura";
+  window.print();
+});
 exportCsvButton.addEventListener("click", exportCsv);
 
 window.addEventListener("beforeinstallprompt", (event) => {

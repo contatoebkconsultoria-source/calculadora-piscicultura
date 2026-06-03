@@ -543,6 +543,10 @@ tr:last-child td {
 }
 
 @media print {
+  @page {
+    margin: 12mm;
+  }
+
   body {
     background: white;
   }
@@ -559,5 +563,25 @@ tr:last-child td {
     max-height: none;
     box-shadow: none;
     border: 0;
+    overflow: visible;
+  }
+
+  .report-header {
+    color: var(--ink);
+    background: white;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .report-content {
+    padding: 16px 0 0;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  th,
+  td {
+    font-size: 0.78rem;
   }
 }
