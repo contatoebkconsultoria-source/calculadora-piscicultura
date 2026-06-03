@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#102b55">
+    <meta name="description" content="Calculadora de biometria para piscicultura com relatório por tanque.">
+    <title>Calculadora Piscicultura</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Biometria no local</p>
+          <h1>Calculadora Piscicultura</h1>
+        </div>
+        <button class="header-icon install-button" type="button" id="installApp" hidden aria-label="Instalar aplicativo">
+          <svg viewBox="0 0 24 24" role="img">
+            <path d="M12 3v10M8 9l4 4 4-4"/>
+            <path d="M5 14v5h14v-5"/>
+          </svg>
+        </button>
+      </header>
+
+      <section class="calculator-card">
+        <form id="biometryForm" autocomplete="off">
+          <div class="field-grid field-grid-2">
+            <label class="field">
+              <span>Propriedade</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-7h6v7"/></svg>
+                </span>
+                <input id="property" name="property" type="text" placeholder="Ex.: Fazenda Boa Vista" required>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Data</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 5h14a2 2 0 0 1 2 2v14H3V7a2 2 0 0 1 2-2Z"/></svg>
+                </span>
+                <input id="date" name="date" type="date" required>
+              </span>
+            </label>
+          </div>
+
+          <div class="field-grid field-grid-2">
+            <label class="field">
+              <span>Unidade produtiva</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 19h16M5 19V8l7-5 7 5v11M9 19v-6h6v6M9 10h.01M15 10h.01"/></svg>
+                </span>
+                <input id="tank" name="tank" type="text" placeholder="Ex.: Tanque 01" required>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Espécie</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 12s4-6 10-6 8 6 8 6-2 6-8 6-10-6-10-6Z"/><path d="m3 12-2 3v-6l2 3ZM15 9h.01"/></svg>
+                </span>
+                <select id="species" name="species" required>
+                  <option value="">Selecione a espécie</option>
+                  <option>Tilápia do Nilo</option>
+                  <option>Tambaçu</option>
+                  <option>Tambatinga</option>
+                  <option>Pacu</option>
+                  <option>Pintado</option>
+                  <option>Cachara</option>
+                  <option>Dourado</option>
+                  <option>Tambaqui</option>
+                  <option>Pirapitinga</option>
+                  <option>Surubim</option>
+                </select>
+              </span>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Quantidade de peixes total</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">#</span>
+                <input id="fishTotal" name="fishTotal" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required>
+                <span class="unit">peixes</span>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Amostragem</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 19h16M6 16l4-5 4 3 4-8M18 6h-4M18 6v4"/></svg>
+                </span>
+                <input id="sampleCount" name="sampleCount" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required>
+                <span class="unit">peixes</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="field-grid field-grid-2">
+            <label class="field">
+              <span>Peso total da amostragem</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 8h8l2 13H6L8 8ZM10 8a2 2 0 1 1 4 0"/></svg>
+                </span>
+                <input id="sampleWeight" name="sampleWeight" type="number" min="0" step="0.001" inputmode="decimal" placeholder="0" required>
+                <span class="unit">kg</span>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Peso médio</span>
+              <span class="input-shell readonly">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="m4 19 7-7M9 5l10 10-4 4L5 9l4-4Z"/><path d="m8 8 2-2M11 11l2-2M14 14l2-2"/></svg>
+                </span>
+                <output id="averageWeight">0</output>
+                <span class="unit">kg</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Biomassa estimada</span>
+              <span class="input-shell readonly">
+                <span class="input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 19h16M7 17V9M12 17V5M17 17v-7M6 9h2M11 5h2M16 10h2"/></svg>
+                </span>
+                <output id="biomass">0</output>
+                <span class="unit">kg</span>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Taxa de Alimentação</span>
+              <span class="input-shell">
+                <span class="input-icon" aria-hidden="true">%</span>
+                <input id="feedRate" name="feedRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0" required>
+                <span class="unit">%</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="result-panel">
+            <span class="result-label">Ração/dia</span>
+            <div class="result-value">
+              <span class="result-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 8h8l2 13H6L8 8ZM10 8a2 2 0 1 1 4 0"/></svg>
+              </span>
+              <output id="dailyFeed">0</output>
+              <span>kg</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="secondary-button" type="button" id="clearForm">Limpar</button>
+            <button class="secondary-button" type="button" id="cancelEdit" hidden>Cancelar edição</button>
+            <button class="primary-button" type="submit" id="saveButton">Salvar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="saved-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Sessão atual</p>
+            <h2>Biometrias salvas</h2>
+          </div>
+          <span id="savedCount" class="counter">0</span>
+        </div>
+
+        <div id="recordsList" class="records-list"></div>
+
+        <div class="actions report-actions">
+          <button class="secondary-button danger" type="button" id="resetRecords">Apagar sessão</button>
+          <button class="primary-button" type="button" id="generateReport" disabled>Gerar Relatório</button>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="reportDialog" class="report-dialog">
+      <div class="report-header">
+        <div>
+          <p class="eyebrow">Relatório final</p>
+          <h2>Calculadora Piscicultura</h2>
+        </div>
+        <button class="icon-button" id="closeReport" type="button" aria-label="Fechar relatório">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div id="reportContent" class="report-content"></div>
+
+      <div class="actions report-footer">
+        <button class="secondary-button" type="button" id="exportCsv">Exportar CSV</button>
+        <button class="primary-button" type="button" id="printReport">Imprimir</button>
+      </div>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
