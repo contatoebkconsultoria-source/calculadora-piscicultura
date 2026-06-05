@@ -388,6 +388,213 @@ function exportCsv() {
   URL.revokeObjectURL(url);
 }
 
+function cleanPdfText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapePdfText(value) {
+  return cleanPdfText(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function shortenPdfText(value, maxLength) {
+  const text = cleanPdfText(value);
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 1))}.`;
+}
+
+function pdfText(ops, text, x, y, size = 9, font = "F1", color = "0 0 0") {
+  ops.push(`BT /${font} ${size} Tf ${color} rg ${x} ${y} Td (${escapePdfText(text)}) Tj ET`);
+}
+
+function pdfRect(ops, x, y, width, height, color) {
+  ops.push(`q ${color} rg ${x} ${y} ${width} ${height} re f Q`);
+}
+
+function pdfLine(ops, x1, y1, x2, y2, color = "0.82 0.86 0.90", width = 0.6) {
+  ops.push(`q ${color} RG ${width} w ${x1} ${y1} m ${x2} ${y2} l S Q`);
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function buildPdf(pageStreams) {
+  const objects = [];
+  objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
+  objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
+
+  let nextObject = 5;
+  const pageRefs = [];
+
+  pageStreams.forEach((stream) => {
+    const contentObject = nextObject++;
+    const pageObject = nextObject++;
+
+    objects[contentObject] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+    objects[pageObject] =
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 841.89 595.28] ` +
+      `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >>`;
+    pageRefs.push(`${pageObject} 0 R`);
+  });
+
+  objects[2] = `<< /Type /Pages /Count ${pageRefs.length} /Kids [${pageRefs.join(" ")}] >>`;
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+
+  for (let index = 1; index < objects.length; index += 1) {
+    offsets[index] = pdf.length;
+    pdf += `${index} 0 obj\n${objects[index]}\nendobj\n`;
+  }
+
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length}\n`;
+  pdf += "0000000000 65535 f \n";
+
+  for (let index = 1; index < objects.length; index += 1) {
+    pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  }
+
+  pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return pdf;
+}
+
+function addPdfPageHeader(ops, pageNumber) {
+  pdfRect(ops, 0, 540, 841.89, 55, "0.06 0.16 0.33");
+  pdfText(ops, "Calculadora Piscicultura", 34, 570, 18, "F2", "1 1 1");
+  pdfText(ops, "Relatorio de Biometria", 34, 552, 10, "F1", "0.82 0.90 1");
+  pdfText(ops, `Pagina ${pageNumber}`, 765, 552, 9, "F1", "0.82 0.90 1");
+}
+
+function addPdfTableHeader(ops, y, columns) {
+  pdfRect(ops, 34, y - 5, 774, 22, "0.93 0.96 0.98");
+  let x = 38;
+  columns.forEach((column) => {
+    pdfText(ops, column.label, x, y + 2, 7.5, "F2", "0.18 0.27 0.40");
+    x += column.width;
+  });
+  pdfLine(ops, 34, y - 7, 808, y - 7, "0.70 0.76 0.84", 0.8);
+}
+
+function generatePdfReport() {
+  if (records.length === 0) return;
+
+  const summary = getSummary();
+  const firstRecord = records[0];
+  const columns = [
+    { label: "Tanque", width: 92, value: (record) => shortenPdfText(record.tank, 16) },
+    { label: "Especie", width: 100, value: (record) => shortenPdfText(record.species, 17) },
+    { label: "Peixes", width: 68, value: (record) => formatNumber(record.fishTotal, 0) },
+    { label: "Amostra", width: 64, value: (record) => formatNumber(record.sampleCount, 0) },
+    { label: "Peso am.", width: 90, value: (record) => `${formatNumber(record.sampleWeight)} kg` },
+    { label: "Peso medio", width: 88, value: (record) => `${formatNumber(record.averageWeight, 3)} kg` },
+    { label: "Biomassa", width: 88, value: (record) => `${formatNumber(record.biomass)} kg` },
+    { label: "Taxa", width: 58, value: (record) => `${formatNumber(record.feedRate)}%` },
+    { label: "Racao/dia", width: 82, value: (record) => `${formatNumber(record.dailyFeed)} kg` },
+  ];
+
+  const pageStreams = [];
+  let ops = [];
+  let pageNumber = 1;
+  let y = 0;
+
+  function startPage() {
+    ops = [];
+    pageStreams.push(ops);
+    addPdfPageHeader(ops, pageNumber);
+    y = 510;
+    pageNumber += 1;
+  }
+
+  startPage();
+
+  pdfText(ops, "Dados gerais", 34, y, 12, "F2", "0.06 0.16 0.33");
+  y -= 20;
+
+  const summaryCards = [
+    ["Propriedade", firstRecord.property],
+    ["Data", formatDate(firstRecord.date)],
+    ["Tanques", summary.tanks],
+    ["Peixes", formatNumber(summary.totalFish, 0)],
+    ["Peso medio geral", `${formatNumber(summary.weightedAverage, 3)} kg`],
+    ["Biomassa total", `${formatNumber(summary.totalBiomass)} kg`],
+    ["Racao total/dia", `${formatNumber(summary.totalFeed)} kg`],
+    ["Especies", new Set(records.map((record) => record.species)).size],
+  ];
+
+  summaryCards.forEach(([label, value], index) => {
+    const column = index % 4;
+    const row = Math.floor(index / 4);
+    const x = 34 + column * 194;
+    const cardY = y - row * 58;
+
+    pdfRect(ops, x, cardY - 36, 178, 46, "0.96 0.98 1");
+    pdfLine(ops, x, cardY - 36, x + 178, cardY - 36, "0.78 0.84 0.90", 0.5);
+    pdfText(ops, label.toUpperCase(), x + 10, cardY - 5, 7, "F2", "0.45 0.52 0.62");
+    pdfText(ops, shortenPdfText(value, 28), x + 10, cardY - 24, 11, "F2", "0 0 0");
+  });
+
+  y -= 132;
+  pdfText(ops, "Biometrias por tanque", 34, y, 12, "F2", "0.06 0.16 0.33");
+  y -= 28;
+  addPdfTableHeader(ops, y, columns);
+  y -= 22;
+
+  records.forEach((record, index) => {
+    if (y < 58) {
+      startPage();
+      pdfText(ops, "Biometrias por tanque", 34, y, 12, "F2", "0.06 0.16 0.33");
+      y -= 28;
+      addPdfTableHeader(ops, y, columns);
+      y -= 22;
+    }
+
+    if (index % 2 === 0) {
+      pdfRect(ops, 34, y - 7, 774, 20, "0.99 0.99 1");
+    }
+
+    let x = 38;
+    columns.forEach((column) => {
+      pdfText(ops, column.value(record), x, y, 7.5, "F1", "0.05 0.08 0.12");
+      x += column.width;
+    });
+
+    pdfLine(ops, 34, y - 10, 808, y - 10, "0.88 0.91 0.94", 0.4);
+    y -= 22;
+  });
+
+  y -= 10;
+  if (y < 70) startPage();
+  pdfText(ops, "Observacao", 34, y, 10, "F2", "0.06 0.16 0.33");
+  pdfText(
+    ops,
+    "Relatorio gerado automaticamente com base nas biometrias salvas no aplicativo.",
+    34,
+    y - 17,
+    8,
+    "F1",
+    "0.36 0.42 0.50"
+  );
+
+  const pdf = buildPdf(pageStreams.map((streamOps) => streamOps.join("\n")));
+  const blob = new Blob([pdf], { type: "application/pdf" });
+  const fileDate = firstRecord.date || todayValue();
+  downloadBlob(blob, `relatorio-biometria-${fileDate}.pdf`);
+}
+
 Object.values(fields).forEach((field) => {
   field.addEventListener("input", calculate);
   field.addEventListener("change", calculate);
@@ -460,10 +667,7 @@ generateReportButton.addEventListener("click", () => {
 });
 
 closeReportButton.addEventListener("click", () => reportDialog.close());
-printReportButton.addEventListener("click", () => {
-  document.title = "Relatorio Biometria Piscicultura";
-  window.print();
-});
+printReportButton.addEventListener("click", generatePdfReport);
 exportCsvButton.addEventListener("click", exportCsv);
 
 window.addEventListener("beforeinstallprompt", (event) => {
