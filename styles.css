@@ -233,6 +233,48 @@ output {
   font-weight: 700;
 }
 
+.feeding-hint {
+  padding: 14px;
+  color: rgba(20, 39, 71, 0.8);
+  background: rgba(237, 246, 251, 0.62);
+  border: 1px solid rgba(15, 95, 156, 0.16);
+  border-radius: 8px;
+}
+
+.feeding-hint-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.feeding-hint span {
+  display: block;
+  color: rgba(114, 128, 151, 0.86);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.feeding-hint strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.92rem;
+}
+
+.feeding-hint-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.feeding-hint p {
+  margin: 10px 0 0;
+  color: rgba(114, 128, 151, 0.9);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .result-panel {
   padding: 16px;
   color: #0d5228;
@@ -520,6 +562,7 @@ tr:last-child td {
   }
 
   .field-grid-2,
+  .feeding-hint-grid,
   .summary-grid {
     grid-template-columns: 1fr;
   }

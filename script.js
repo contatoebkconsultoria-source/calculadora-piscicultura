@@ -33,9 +33,74 @@ const printReportButton = document.querySelector("#printReport");
 const exportCsvButton = document.querySelector("#exportCsv");
 const installAppButton = document.querySelector("#installApp");
 const customSpeciesField = document.querySelector("#customSpeciesField");
+const feedingHint = document.querySelector("#feedingHint");
+const feedingHintGroup = document.querySelector("#feedingHintGroup");
+const feedingHintPhase = document.querySelector("#feedingHintPhase");
+const feedingHintRate = document.querySelector("#feedingHintRate");
+const feedingHintMeals = document.querySelector("#feedingHintMeals");
+const feedingHintProtein = document.querySelector("#feedingHintProtein");
+const feedingHintNote = document.querySelector("#feedingHintNote");
 const listedSpecies = Array.from(fields.species.options)
   .map((option) => option.value)
   .filter((value) => value && value !== "Outros");
+
+const feedingGroups = {
+  carnivores: {
+    group: "Carnívoros",
+    species: ["Pirarucu", "Pintado", "Dourado", "Traíra", "Tucunaré"],
+    phases: [
+      { min: 5, max: 15, phase: "5 a 15 g", rate: "6% a 8%", meals: "4 a 6", protein: "45% a 55% PB" },
+      { min: 15, max: 100, phase: "15 a 100 g", rate: "5% a 7%", meals: "4 a 6", protein: "40% a 45% PB" },
+      { min: 100, max: 500, phase: "100 a 500 g", rate: "4% a 5%", meals: "3 a 4", protein: "40% a 45% PB" },
+      { min: 500, max: 1000, phase: "500 g a 1 kg", rate: "3% a 4%", meals: "2 a 3", protein: "40% PB" },
+      { min: 1000, max: 5000, phase: "1 a 5 kg", rate: "2% a 3%", meals: "2", protein: "36% a 40% PB" },
+      { min: 5000, max: Infinity, phase: "Acima de 5 kg", rate: "1% a 2%", meals: "1 a 2", protein: "36% a 40% PB" },
+    ],
+  },
+  roundFish: {
+    group: "Onívoros - peixes redondos",
+    species: ["Tambaqui", "Tambatinga", "Pacu"],
+    phases: [
+      { min: 0, max: 1, phase: "0 a 1 g", rate: "15% a 10%", meals: "5 a 6", protein: "45% a 55% PB" },
+      { min: 1, max: 20, phase: "1 a 20 g", rate: "10% a 6%", meals: "4 a 5", protein: "40% a 45% PB" },
+      { min: 20, max: 50, phase: "20 a 50 g", rate: "6%", meals: "4", protein: "40% a 45% PB" },
+      { min: 50, max: 200, phase: "50 a 200 g", rate: "5% a 4%", meals: "4 a 5", protein: "36% a 40% PB" },
+      { min: 200, max: 500, phase: "200 a 500 g", rate: "4% a 3%", meals: "3 a 4", protein: "32% a 36% PB" },
+      { min: 500, max: 1000, phase: "500 g a 1 kg", rate: "3% a 2%", meals: "2 a 3", protein: "28% a 32% PB" },
+      { min: 1000, max: 2000, phase: "1 a 2 kg", rate: "2% a 1%", meals: "1 a 2", protein: "28% PB" },
+      { min: 2000, max: Infinity, phase: "Acima de 2 kg", rate: "1% ou menos", meals: "1 a 2", protein: "28% PB" },
+    ],
+  },
+  tilapia: {
+    group: "Onívoros - tilápia",
+    species: ["Tilapia"],
+    phases: [
+      { min: 1, max: 5, phase: "1 a 5 g", rate: "14%", meals: "5", protein: "42% PB" },
+      { min: 5, max: 10, phase: "5 a 10 g", rate: "8%", meals: "4", protein: "42% PB" },
+      { min: 10, max: 20, phase: "10 a 20 g", rate: "5%", meals: "3", protein: "42% PB" },
+      { min: 20, max: 50, phase: "20 a 50 g", rate: "4,5%", meals: "3", protein: "42% PB" },
+      { min: 50, max: 150, phase: "50 a 150 g", rate: "3,4%", meals: "3", protein: "36% PB" },
+      { min: 150, max: 250, phase: "150 a 250 g", rate: "3%", meals: "3", protein: "32% PB" },
+      { min: 250, max: 400, phase: "250 a 400 g", rate: "2,2%", meals: "2", protein: "28% a 32% PB" },
+      { min: 400, max: 600, phase: "400 a 600 g", rate: "1,4%", meals: "2", protein: "28% a 32% PB" },
+      { min: 600, max: 800, phase: "600 a 800 g", rate: "1%", meals: "2", protein: "28% a 32% PB" },
+      { min: 800, max: 1300, phase: "800 g a 1,3 kg", rate: "0,8%", meals: "2", protein: "28% a 32% PB" },
+      { min: 1300, max: 1800, phase: "1,3 a 1,8 kg", rate: "0,6%", meals: "2", protein: "28% a 32% PB" },
+    ],
+  },
+  detritivores: {
+    group: "Detritívoros / iliófagos",
+    species: ["Curimata", "Bodo", "Cascudo", "Branquinha"],
+    phases: [
+      { min: 0.5, max: 4, phase: "0,5 a 4 g", rate: "9% a 10%", meals: "4", protein: "45% a 55% PB" },
+      { min: 4, max: 40, phase: "4 a 40 g", rate: "6% a 8%", meals: "4", protein: "40% a 45% PB" },
+      { min: 40, max: 100, phase: "40 a 100 g", rate: "5% a 6%", meals: "3 a 4", protein: "36% a 40% PB" },
+      { min: 100, max: 200, phase: "100 a 200 g", rate: "3% a 5%", meals: "3 a 4", protein: "32% a 36% PB" },
+      { min: 200, max: 750, phase: "200 a 750 g", rate: "1,5% a 2,5%", meals: "2 a 3", protein: "28% a 32% PB" },
+      { min: 750, max: Infinity, phase: "Acima de 750 g", rate: "0,8% a 1,5%", meals: "2", protein: "28% a 32% PB" },
+    ],
+  },
+};
 
 let records = loadRecords();
 let installPrompt = null;
@@ -86,6 +151,7 @@ function calculate() {
   outputs.averageWeight.value = formatNumber(averageWeight, 3);
   outputs.biomass.value = formatNumber(biomass, 2);
   outputs.dailyFeed.value = formatNumber(dailyFeed, 2);
+  updateFeedingHint(averageWeight);
 
   return {
     averageWeight,
@@ -111,6 +177,60 @@ function updateCustomSpeciesField() {
   if (!isOtherSpecies) {
     fields.customSpecies.value = "";
   }
+}
+
+function getFeedingGroup(species) {
+  return Object.values(feedingGroups).find((group) => group.species.includes(species));
+}
+
+function getFeedingPhase(group, averageWeightKg) {
+  const averageWeightGrams = averageWeightKg * 1000;
+  if (!averageWeightGrams) return null;
+
+  return (
+    group.phases.find((phase) => averageWeightGrams >= phase.min && averageWeightGrams <= phase.max) ||
+    (averageWeightGrams < group.phases[0].min ? group.phases[0] : group.phases[group.phases.length - 1])
+  );
+}
+
+function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
+  const species = selectedSpeciesName();
+
+  if (!species || fields.species.value === "Outros") {
+    feedingHint.hidden = true;
+    return;
+  }
+
+  feedingHint.hidden = false;
+  const group = getFeedingGroup(species);
+
+  if (!group) {
+    feedingHintGroup.textContent = "Referência não cadastrada";
+    feedingHintPhase.textContent = "-";
+    feedingHintRate.textContent = "-";
+    feedingHintMeals.textContent = "-";
+    feedingHintProtein.textContent = "-";
+    feedingHintNote.textContent = "Não há tabela específica para esta espécie nesta referência. Ajuste a taxa conforme manejo local e orientação técnica.";
+    return;
+  }
+
+  feedingHintGroup.textContent = group.group;
+  const phase = getFeedingPhase(group, averageWeightKg);
+
+  if (!phase) {
+    feedingHintPhase.textContent = "Informe o peso médio";
+    feedingHintRate.textContent = "-";
+    feedingHintMeals.textContent = "-";
+    feedingHintProtein.textContent = "-";
+    feedingHintNote.textContent = "Preencha amostragem e peso total para sugerir a fase conforme o peso médio calculado.";
+    return;
+  }
+
+  feedingHintPhase.textContent = phase.phase;
+  feedingHintRate.textContent = phase.rate;
+  feedingHintMeals.textContent = phase.meals;
+  feedingHintProtein.textContent = phase.protein;
+  feedingHintNote.textContent = `Peso médio atual: ${formatNumber(averageWeightKg * 1000, 1)} g. Use como referência e ajuste conforme temperatura, consumo e qualidade da água.`;
 }
 
 function loadRecords() {
