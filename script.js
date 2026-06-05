@@ -36,6 +36,7 @@ const customSpeciesField = document.querySelector("#customSpeciesField");
 const feedingHint = document.querySelector("#feedingHint");
 const feedingHintGroup = document.querySelector("#feedingHintGroup");
 const feedingHintPhase = document.querySelector("#feedingHintPhase");
+const feedingHintStage = document.querySelector("#feedingHintStage");
 const feedingHintRate = document.querySelector("#feedingHintRate");
 const feedingHintMeals = document.querySelector("#feedingHintMeals");
 const feedingHintProtein = document.querySelector("#feedingHintProtein");
@@ -49,55 +50,69 @@ const feedingGroups = {
     group: "Carnívoros",
     species: ["Pirarucu", "Pintado", "Dourado", "Traíra", "Tucunaré"],
     phases: [
-      { min: 5, max: 15, phase: "5 a 15 g", rate: "6% a 8%", meals: "4 a 6", protein: "45% a 55% PB" },
-      { min: 15, max: 100, phase: "15 a 100 g", rate: "5% a 7%", meals: "4 a 6", protein: "40% a 45% PB" },
-      { min: 100, max: 500, phase: "100 a 500 g", rate: "4% a 5%", meals: "3 a 4", protein: "40% a 45% PB" },
-      { min: 500, max: 1000, phase: "500 g a 1 kg", rate: "3% a 4%", meals: "2 a 3", protein: "40% PB" },
-      { min: 1000, max: 5000, phase: "1 a 5 kg", rate: "2% a 3%", meals: "2", protein: "36% a 40% PB" },
-      { min: 5000, max: Infinity, phase: "Acima de 5 kg", rate: "1% a 2%", meals: "1 a 2", protein: "36% a 40% PB" },
+      { min: 5, max: 15, phase: "5 a 15 g", stage: "alevino treinado", rate: "6% a 8%", meals: "4 a 6", protein: "45% a 50% PB", note: "Fase sensível; usar ração fina e observar canibalismo." },
+      { min: 15, max: 100, phase: "15 a 100 g", stage: "alevinagem / recria inicial", rate: "5% a 7%", meals: "4 a 6", protein: "40% a 45% PB", note: "Boa fase para uniformização do lote." },
+      { min: 100, max: 500, phase: "100 a 500 g", stage: "recria", rate: "4% a 5%", meals: "3 a 4", protein: "40% a 45% PB", note: "Ajustar com biometria e observar consumo." },
+      { min: 500, max: 1000, phase: "500 g a 1 kg", stage: "recria final", rate: "3% a 4%", meals: "2 a 3", protein: "40% PB", note: "Evitar excesso, principalmente com OD baixo." },
+      { min: 1000, max: 5000, phase: "1 a 5 kg", stage: "engorda", rate: "2% a 3%", meals: "2", protein: "36% a 40% PB", note: "Faixa prática para engorda." },
+      { min: 5000, max: Infinity, phase: "Acima de 5 kg", stage: "terminação", rate: "1% a 2%", meals: "1 a 2", protein: "36% a 40% PB", note: "Trabalhar mais próximo de 1% em peixe grande." },
     ],
   },
   roundFish: {
     group: "Onívoros - peixes redondos",
     species: ["Tambaqui", "Tambatinga", "Pacu"],
     phases: [
-      { min: 0, max: 1, phase: "0 a 1 g", rate: "15% a 10%", meals: "5 a 6", protein: "45% a 55% PB" },
-      { min: 1, max: 20, phase: "1 a 20 g", rate: "10% a 6%", meals: "4 a 5", protein: "40% a 45% PB" },
-      { min: 20, max: 50, phase: "20 a 50 g", rate: "6%", meals: "4", protein: "40% a 45% PB" },
-      { min: 50, max: 200, phase: "50 a 200 g", rate: "5% a 4%", meals: "4 a 5", protein: "36% a 40% PB" },
-      { min: 200, max: 500, phase: "200 a 500 g", rate: "4% a 3%", meals: "3 a 4", protein: "32% a 36% PB" },
-      { min: 500, max: 1000, phase: "500 g a 1 kg", rate: "3% a 2%", meals: "2 a 3", protein: "28% a 32% PB" },
-      { min: 1000, max: 2000, phase: "1 a 2 kg", rate: "2% a 1%", meals: "1 a 2", protein: "28% PB" },
-      { min: 2000, max: Infinity, phase: "Acima de 2 kg", rate: "1% ou menos", meals: "1 a 2", protein: "28% PB" },
+      { min: 0.5, max: 7, phase: "0,5 a 7 g", stage: "alevinagem", rate: "20% a 10%", meals: "6", protein: "55% PB", note: "Ração farelada/pó; fase de alto consumo." },
+      { min: 7, max: 25, phase: "7 a 25 g", stage: "recria I", rate: "7,7% a 6,4%", meals: "4", protein: "40% PB", note: "Usar ração 1-2 mm." },
+      { min: 25, max: 70, phase: "25 a 70 g", stage: "recria II", rate: "5,9% a 4,6%", meals: "4", protein: "40% PB", note: "Fase comum de ajuste inicial em viveiro." },
+      { min: 70, max: 188, phase: "70 a 188 g", stage: "recria III", rate: "4,2% a 2,7%", meals: "4", protein: "32% PB", note: "Começar a reduzir a taxa." },
+      { min: 188, max: 298, phase: "188 a 298 g", stage: "recria IV", rate: "2,6% a 2,2%", meals: "4", protein: "28% PB", note: "Evitar excesso de ração." },
+      { min: 298, max: 530, phase: "298 a 530 g", stage: "engorda I", rate: "2,1% a 1,8%", meals: "3", protein: "28% PB", note: "Boa faixa para viveiro escavado." },
+      { min: 530, max: 1000, phase: "530 g a 1 kg", stage: "engorda II", rate: "1,7% a 1,2%", meals: "2", protein: "28% PB", note: "Em água quente, usar limite inferior." },
+      { min: 1000, max: 2500, phase: "1 a 2,5 kg", stage: "engorda III / terminação", rate: "1,0% a 0,8%", meals: "2", protein: "28% PB", note: "Para peixe grande, 1% ou menos costuma ser mais seguro." },
     ],
   },
   tilapia: {
     group: "Onívoros - tilápia",
     species: ["Tilapia"],
     phases: [
-      { min: 1, max: 5, phase: "1 a 5 g", rate: "14%", meals: "5", protein: "42% PB" },
-      { min: 5, max: 10, phase: "5 a 10 g", rate: "8%", meals: "4", protein: "42% PB" },
-      { min: 10, max: 20, phase: "10 a 20 g", rate: "5%", meals: "3", protein: "42% PB" },
-      { min: 20, max: 50, phase: "20 a 50 g", rate: "4,5%", meals: "3", protein: "42% PB" },
-      { min: 50, max: 150, phase: "50 a 150 g", rate: "3,4%", meals: "3", protein: "36% PB" },
-      { min: 150, max: 250, phase: "150 a 250 g", rate: "3%", meals: "3", protein: "32% PB" },
-      { min: 250, max: 400, phase: "250 a 400 g", rate: "2,2%", meals: "2", protein: "28% a 32% PB" },
-      { min: 400, max: 600, phase: "400 a 600 g", rate: "1,4%", meals: "2", protein: "28% a 32% PB" },
-      { min: 600, max: 800, phase: "600 a 800 g", rate: "1%", meals: "2", protein: "28% a 32% PB" },
-      { min: 800, max: 1300, phase: "800 g a 1,3 kg", rate: "0,8%", meals: "2", protein: "28% a 32% PB" },
-      { min: 1300, max: 1800, phase: "1,3 a 1,8 kg", rate: "0,6%", meals: "2", protein: "28% a 32% PB" },
+      { min: 1, max: 5, phase: "1 a 5 g", stage: "alevinagem inicial", rate: "14%", meals: "5", protein: "42% PB", note: "Ração em pó." },
+      { min: 5, max: 10, phase: "5 a 10 g", stage: "alevinagem", rate: "8%", meals: "4", protein: "42% PB", note: "Ração 2-3 mm." },
+      { min: 10, max: 20, phase: "10 a 20 g", stage: "alevinagem / recria inicial", rate: "5%", meals: "3", protein: "42% PB", note: "Boa fase para crescimento rápido." },
+      { min: 20, max: 50, phase: "20 a 50 g", stage: "recria", rate: "4,5%", meals: "3", protein: "42% PB", note: "Ajustar pela biometria." },
+      { min: 50, max: 150, phase: "50 a 150 g", stage: "recria", rate: "3,4%", meals: "3", protein: "36% PB", note: "Ração 3-4 mm." },
+      { min: 150, max: 250, phase: "150 a 250 g", stage: "recria final", rate: "3%", meals: "3", protein: "32% PB", note: "Ração 4-6 mm." },
+      { min: 250, max: 400, phase: "250 a 400 g", stage: "engorda", rate: "2,2%", meals: "2", protein: "28% a 32% PB", note: "Faixa comum de engorda." },
+      { min: 400, max: 600, phase: "400 a 600 g", stage: "engorda", rate: "1,4%", meals: "2", protein: "28% a 32% PB", note: "Reduzir se houver sobra." },
+      { min: 600, max: 800, phase: "600 a 800 g", stage: "terminação", rate: "1%", meals: "2", protein: "28% a 32% PB", note: "Usar com água bem oxigenada." },
+      { min: 800, max: 1300, phase: "800 g a 1,3 kg", stage: "terminação", rate: "0,8%", meals: "2", protein: "28% a 32% PB", note: "Para peixe grande." },
+      { min: 1300, max: 1800, phase: "1,3 a 1,8 kg", stage: "terminação avançada", rate: "0,6%", meals: "2", protein: "28% a 32% PB", note: "Usar somente se houver mercado para peixe grande." },
+    ],
+  },
+  otherOmnivores: {
+    group: "Onívoros - outros",
+    species: ["Matrinxa", "Panga", "Piau"],
+    phases: [
+      { min: 1, max: 10, phase: "1 a 10 g", stage: "alevinagem inicial", rate: "10% a 12%", meals: "5 a 6", protein: "40% a 45% PB", note: "Usar ração fina; fase de alto metabolismo." },
+      { min: 10, max: 25, phase: "10 a 25 g", stage: "alevinagem", rate: "7% a 8%", meals: "4 a 5", protein: "36% a 40% PB", note: "Ajustar pela resposta de consumo." },
+      { min: 25, max: 70, phase: "25 a 70 g", stage: "recria inicial", rate: "5% a 6%", meals: "4", protein: "36% a 40% PB", note: "Faixa segura para juvenis." },
+      { min: 70, max: 200, phase: "70 a 200 g", stage: "recria", rate: "3% a 4,5%", meals: "3 a 4", protein: "32% a 36% PB", note: "Reduzir conforme crescimento." },
+      { min: 200, max: 500, phase: "200 a 500 g", stage: "recria final", rate: "2% a 3%", meals: "3", protein: "30% a 32% PB", note: "Manejo parecido com onívoros de médio porte." },
+      { min: 500, max: 1000, phase: "500 g a 1 kg", stage: "engorda", rate: "1,5% a 2%", meals: "2", protein: "28% a 32% PB", note: "Usar limite inferior se houver sobra." },
+      { min: 1000, max: 2000, phase: "1 a 2 kg", stage: "engorda / terminação", rate: "1% a 1,5%", meals: "2", protein: "28% a 30% PB", note: "Para peixe maior, evitar superalimentação." },
+      { min: 2000, max: Infinity, phase: "Acima de 2 kg", stage: "terminação", rate: "0,8% a 1%", meals: "1 a 2", protein: "28% PB", note: "Uso mais conservador." },
     ],
   },
   detritivores: {
-    group: "Detritívoros / iliófagos",
+    group: "Detritívoros / iliófagos / peixes de fundo",
     species: ["Curimata", "Bodo", "Cascudo", "Branquinha"],
     phases: [
-      { min: 0.5, max: 4, phase: "0,5 a 4 g", rate: "9% a 10%", meals: "4", protein: "45% a 55% PB" },
-      { min: 4, max: 40, phase: "4 a 40 g", rate: "6% a 8%", meals: "4", protein: "40% a 45% PB" },
-      { min: 40, max: 100, phase: "40 a 100 g", rate: "5% a 6%", meals: "3 a 4", protein: "36% a 40% PB" },
-      { min: 100, max: 200, phase: "100 a 200 g", rate: "3% a 5%", meals: "3 a 4", protein: "32% a 36% PB" },
-      { min: 200, max: 750, phase: "200 a 750 g", rate: "1,5% a 2,5%", meals: "2 a 3", protein: "28% a 32% PB" },
-      { min: 750, max: Infinity, phase: "Acima de 750 g", rate: "0,8% a 1,5%", meals: "2", protein: "28% a 32% PB" },
+      { min: 0.5, max: 4, phase: "0,5 a 4 g", stage: "berçário / alevino inicial", rate: "9% a 10%", meals: "4", protein: "45% a 50% PB", note: "Usar ração fina; manter viveiro bem preparado." },
+      { min: 4, max: 40, phase: "4 a 40 g", stage: "alevinagem", rate: "6% a 8%", meals: "4", protein: "40% a 45% PB", note: "Boa oferta de alimento natural ajuda muito." },
+      { min: 40, max: 100, phase: "40 a 100 g", stage: "recria inicial", rate: "5% a 6%", meals: "3 a 4", protein: "36% a 40% PB", note: "Para bodó/cascudo, usar o limite inferior." },
+      { min: 100, max: 200, phase: "100 a 200 g", stage: "recria", rate: "3% a 5%", meals: "3", protein: "32% a 36% PB", note: "Evitar excesso no fundo." },
+      { min: 200, max: 750, phase: "200 a 750 g", stage: "crescimento / engorda", rate: "1,5% a 2,5%", meals: "2 a 3", protein: "28% a 32% PB", note: "Em policultivo, pode usar menor taxa." },
+      { min: 750, max: Infinity, phase: "Acima de 750 g", stage: "engorda / terminação", rate: "0,8% a 1,5%", meals: "1 a 2", protein: "28% a 32% PB", note: "Ração apenas suplementar; priorizar alimento natural." },
     ],
   },
 };
@@ -207,6 +222,7 @@ function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
   if (!group) {
     feedingHintGroup.textContent = "Referência não cadastrada";
     feedingHintPhase.textContent = "-";
+    feedingHintStage.textContent = "-";
     feedingHintRate.textContent = "-";
     feedingHintMeals.textContent = "-";
     feedingHintProtein.textContent = "-";
@@ -219,6 +235,7 @@ function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
 
   if (!phase) {
     feedingHintPhase.textContent = "Informe o peso médio";
+    feedingHintStage.textContent = "-";
     feedingHintRate.textContent = "-";
     feedingHintMeals.textContent = "-";
     feedingHintProtein.textContent = "-";
@@ -227,10 +244,11 @@ function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
   }
 
   feedingHintPhase.textContent = phase.phase;
+  feedingHintStage.textContent = phase.stage;
   feedingHintRate.textContent = phase.rate;
   feedingHintMeals.textContent = phase.meals;
   feedingHintProtein.textContent = phase.protein;
-  feedingHintNote.textContent = `Peso médio atual: ${formatNumber(averageWeightKg * 1000, 1)} g. Use como referência e ajuste conforme temperatura, consumo e qualidade da água.`;
+  feedingHintNote.textContent = `Peso médio atual: ${formatNumber(averageWeightKg * 1000, 1)} g. ${phase.note}`;
 }
 
 function loadRecords() {
