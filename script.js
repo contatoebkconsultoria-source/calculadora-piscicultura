@@ -615,6 +615,8 @@ function addPdfPageHeader(ops, pageNumber) {
   pdfText(ops, "Calculadora Piscicultura", 34, 570, 18, "F2", "1 1 1");
   pdfText(ops, "Relatorio de Biometria", 34, 552, 10, "F1", "0.82 0.90 1");
   pdfText(ops, `Pagina ${pageNumber}`, 765, 552, 9, "F1", "0.82 0.90 1");
+  pdfText(ops, "Desenvolvido por ebkconsultoria", 324, 306, 18, "F2", "0.90 0.93 0.97");
+  pdfText(ops, "Desenvolvido por ebkconsultoria", 34, 24, 8, "F1", "0.45 0.52 0.62");
 }
 
 function addPdfTableHeader(ops, y, columns) {
@@ -719,7 +721,7 @@ function generatePdfReport() {
   pdfText(ops, "Observacao", 34, y, 10, "F2", "0.06 0.16 0.33");
   pdfText(
     ops,
-    "Relatorio gerado automaticamente com base nas biometrias salvas no aplicativo.",
+    "Relatorio gerado automaticamente com base nas biometrias salvas no aplicativo. Desenvolvido por ebkconsultoria.",
     34,
     y - 17,
     8,

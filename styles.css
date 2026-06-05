@@ -138,6 +138,15 @@ h2 {
   margin-top: 18px;
 }
 
+.app-credit,
+.report-credit {
+  margin: 16px 0 0;
+  color: rgba(114, 128, 151, 0.72);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 form {
   display: grid;
   gap: 18px;
@@ -464,6 +473,10 @@ output {
   padding: 18px;
 }
 
+.report-credit {
+  padding: 0 18px 18px;
+}
+
 .report-header {
   display: flex;
   align-items: center;
@@ -596,7 +609,9 @@ tr:last-child td {
 
   .app-shell,
   .report-header .icon-button,
-  .report-footer {
+  .report-footer,
+  .app-credit,
+  .report-credit {
     display: none;
   }
 

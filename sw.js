@@ -1,4 +1,4 @@
-const cacheName = "calculadora-piscicultura-v9";
+const cacheName = "calculadora-piscicultura-v10";
 const assets = [
   "./",
   "./index.html",
