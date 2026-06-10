@@ -284,6 +284,31 @@ output {
   font-weight: 700;
 }
 
+.suggested-rate-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  margin-top: 12px;
+  padding: 0 14px;
+  color: #0b4a7a;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 95, 156, 0.22);
+  border-radius: 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.suggested-rate-button:hover {
+  background: #ffffff;
+  border-color: rgba(15, 95, 156, 0.38);
+}
+
+.suggested-rate-button:disabled {
+  color: rgba(114, 128, 151, 0.7);
+  cursor: not-allowed;
+}
+
 .result-panel {
   padding: 16px;
   color: #0d5228;
@@ -376,6 +401,29 @@ output {
   border: 1px solid #c9e3f0;
   border-radius: 8px;
   font-weight: 900;
+}
+
+.sort-control {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-weight: 900;
+}
+
+.sort-control span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.sort-control select {
+  min-height: 48px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-weight: 800;
 }
 
 .records-list {

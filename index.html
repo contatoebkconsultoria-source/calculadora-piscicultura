@@ -129,6 +129,7 @@
               </div>
             </div>
             <p id="feedingHintNote">Selecione a espécie e preencha a amostragem para ver a fase sugerida.</p>
+            <button class="suggested-rate-button" type="button" id="useSuggestedRate" hidden>Usar taxa sugerida</button>
           </aside>
 
           <div class="field-grid">
@@ -226,6 +227,15 @@
           </div>
           <span id="savedCount" class="counter">0</span>
         </div>
+
+        <label class="sort-control">
+          <span>Organizar por</span>
+          <select id="sortOrder">
+            <option value="created">Ordem de lançamento</option>
+            <option value="tank-asc">Tanque crescente</option>
+            <option value="tank-desc">Tanque decrescente</option>
+          </select>
+        </label>
 
         <div id="recordsList" class="records-list"></div>
 

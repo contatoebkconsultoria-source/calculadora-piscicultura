@@ -21,6 +21,7 @@ const outputs = {
 
 const recordsList = document.querySelector("#recordsList");
 const savedCount = document.querySelector("#savedCount");
+const sortOrderSelect = document.querySelector("#sortOrder");
 const generateReportButton = document.querySelector("#generateReport");
 const resetRecordsButton = document.querySelector("#resetRecords");
 const clearFormButton = document.querySelector("#clearForm");
@@ -41,6 +42,7 @@ const feedingHintRate = document.querySelector("#feedingHintRate");
 const feedingHintMeals = document.querySelector("#feedingHintMeals");
 const feedingHintProtein = document.querySelector("#feedingHintProtein");
 const feedingHintNote = document.querySelector("#feedingHintNote");
+const useSuggestedRateButton = document.querySelector("#useSuggestedRate");
 const listedSpecies = Array.from(fields.species.options)
   .map((option) => option.value)
   .filter((value) => value && value !== "Outros");
@@ -120,8 +122,11 @@ const feedingGroups = {
 let records = loadRecords();
 let installPrompt = null;
 let editingRecordId = null;
+let sortOrder = localStorage.getItem("calculadora-piscicultura-ordem") || "created";
+let currentSuggestedRate = null;
 
 fields.date.value = todayValue();
+sortOrderSelect.value = sortOrder;
 
 function todayValue() {
   const now = new Date();
@@ -208,11 +213,48 @@ function getFeedingPhase(group, averageWeightKg) {
   );
 }
 
+function parseRateValues(rate) {
+  const values = String(rate).match(/\d+(?:[,.]\d+)?/g) || [];
+  return values.map((value) => Number(value.replace(",", "."))).filter((value) => Number.isFinite(value));
+}
+
+function suggestedRateFromPhase(phase, averageWeightKg) {
+  const rates = parseRateValues(phase.rate);
+  if (rates.length === 0) return null;
+  if (rates.length === 1) return rates[0];
+
+  const averageWeightGrams = averageWeightKg * 1000;
+  if (!Number.isFinite(phase.max) || phase.max <= phase.min || !averageWeightGrams) {
+    return rates[0];
+  }
+
+  const progress = Math.min(1, Math.max(0, (averageWeightGrams - phase.min) / (phase.max - phase.min)));
+  return rates[0] + (rates[1] - rates[0]) * progress;
+}
+
+function formatRateInputValue(value) {
+  return Number(value.toFixed(2)).toString();
+}
+
+function setSuggestedRate(rate) {
+  currentSuggestedRate = rate;
+  const hasRate = Number.isFinite(rate);
+  useSuggestedRateButton.hidden = !hasRate;
+  useSuggestedRateButton.disabled = !hasRate;
+
+  if (hasRate) {
+    useSuggestedRateButton.textContent = `Usar taxa sugerida: ${formatNumber(rate, 2)}%`;
+  } else {
+    useSuggestedRateButton.textContent = "Usar taxa sugerida";
+  }
+}
+
 function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
   const species = selectedSpeciesName();
 
   if (!species || fields.species.value === "Outros") {
     feedingHint.hidden = true;
+    setSuggestedRate(null);
     return;
   }
 
@@ -227,6 +269,7 @@ function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
     feedingHintMeals.textContent = "-";
     feedingHintProtein.textContent = "-";
     feedingHintNote.textContent = "Não há tabela específica para esta espécie nesta referência. Ajuste a taxa conforme manejo local e orientação técnica.";
+    setSuggestedRate(null);
     return;
   }
 
@@ -240,6 +283,7 @@ function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
     feedingHintMeals.textContent = "-";
     feedingHintProtein.textContent = "-";
     feedingHintNote.textContent = "Preencha amostragem e peso total para sugerir a fase conforme o peso médio calculado.";
+    setSuggestedRate(null);
     return;
   }
 
@@ -249,6 +293,7 @@ function updateFeedingHint(averageWeightKg = calculate().averageWeight) {
   feedingHintMeals.textContent = phase.meals;
   feedingHintProtein.textContent = phase.protein;
   feedingHintNote.textContent = `Peso médio atual: ${formatNumber(averageWeightKg * 1000, 1)} g. ${phase.note}`;
+  setSuggestedRate(suggestedRateFromPhase(phase, averageWeightKg));
 }
 
 function loadRecords() {
@@ -263,6 +308,45 @@ function persistRecords() {
   localStorage.setItem(storageKey, JSON.stringify(records));
 }
 
+function tankNumber(record) {
+  const match = String(record.tank || "").match(/\d+(?:[,.]\d+)?/);
+  if (!match) return Number.POSITIVE_INFINITY;
+  return Number(match[0].replace(",", "."));
+}
+
+function compareTankRecords(a, b, direction) {
+  const numberA = tankNumber(a);
+  const numberB = tankNumber(b);
+  const hasNumberA = Number.isFinite(numberA);
+  const hasNumberB = Number.isFinite(numberB);
+
+  if (!hasNumberA && hasNumberB) return 1;
+  if (hasNumberA && !hasNumberB) return -1;
+
+  if (numberA !== numberB) {
+    return direction === "asc" ? numberA - numberB : numberB - numberA;
+  }
+
+  return String(a.tank || "").localeCompare(String(b.tank || ""), "pt-BR", {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function getSortedRecords() {
+  const sortedRecords = [...records];
+
+  if (sortOrder === "tank-asc") {
+    sortedRecords.sort((a, b) => compareTankRecords(a, b, "asc"));
+  }
+
+  if (sortOrder === "tank-desc") {
+    sortedRecords.sort((a, b) => compareTankRecords(a, b, "desc"));
+  }
+
+  return sortedRecords;
+}
+
 function renderRecords() {
   savedCount.textContent = records.length;
   generateReportButton.disabled = records.length === 0;
@@ -272,7 +356,7 @@ function renderRecords() {
     return;
   }
 
-  recordsList.innerHTML = records
+  recordsList.innerHTML = getSortedRecords()
     .map(
       (record) => `
         <article class="record-item${record.id === editingRecordId ? " editing" : ""}">
@@ -407,7 +491,8 @@ function getSummary() {
 
 function renderReport() {
   const summary = getSummary();
-  const firstRecord = records[0];
+  const sortedRecords = getSortedRecords();
+  const firstRecord = sortedRecords[0];
 
   reportContent.innerHTML = `
     <div class="summary-grid">
@@ -461,7 +546,7 @@ function renderReport() {
           </tr>
         </thead>
         <tbody>
-          ${records
+          ${sortedRecords
             .map(
               (record) => `
                 <tr>
@@ -499,7 +584,7 @@ function exportCsv() {
     "Ração dia kg",
   ];
 
-  const rows = records.map((record) => [
+  const rows = getSortedRecords().map((record) => [
     record.property,
     formatDate(record.date),
     record.tank,
@@ -633,7 +718,8 @@ function generatePdfReport() {
   if (records.length === 0) return;
 
   const summary = getSummary();
-  const firstRecord = records[0];
+  const sortedRecords = getSortedRecords();
+  const firstRecord = sortedRecords[0];
   const columns = [
     { label: "Tanque", width: 92, value: (record) => shortenPdfText(record.tank, 16) },
     { label: "Especie", width: 100, value: (record) => shortenPdfText(record.species, 17) },
@@ -693,7 +779,7 @@ function generatePdfReport() {
   addPdfTableHeader(ops, y, columns);
   y -= 22;
 
-  records.forEach((record, index) => {
+  sortedRecords.forEach((record, index) => {
     if (y < 58) {
       startPage();
       pdfText(ops, "Biometrias por tanque", 34, y, 12, "F2", "0.06 0.16 0.33");
@@ -741,6 +827,19 @@ Object.values(fields).forEach((field) => {
 });
 
 fields.species.addEventListener("change", updateCustomSpeciesField);
+
+useSuggestedRateButton.addEventListener("click", () => {
+  if (!Number.isFinite(currentSuggestedRate)) return;
+  fields.feedRate.value = formatRateInputValue(currentSuggestedRate);
+  calculate();
+  fields.feedRate.focus();
+});
+
+sortOrderSelect.addEventListener("change", () => {
+  sortOrder = sortOrderSelect.value;
+  localStorage.setItem("calculadora-piscicultura-ordem", sortOrder);
+  renderRecords();
+});
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
